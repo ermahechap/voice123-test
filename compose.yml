@@ -1,0 +1,6 @@
+services:
+  voice123-test:
+    build:
+      dockerfile: ./Dockerfile
+    ports:
+      - 3000:3000
