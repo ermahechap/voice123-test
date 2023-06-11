@@ -6,7 +6,7 @@ export default function RootLayout({ children }) {
   return (<html>
     <body>
       <AppMenu/>
-      <Container maxWidth='xl' sx={{mt: 3}}>
+      <Container maxWidth='xl' sx={{mt: 5}}>
         {children}
       </Container>
     </body>

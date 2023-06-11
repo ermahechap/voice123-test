@@ -1,32 +1,49 @@
 'use client';
-import { Box, Grid, Paper } from "@mui/material";
+import { useState, useEffect, useRef } from "react";
+import { Grid } from "@mui/material";
+import { SearchBar, SearchResult } from "./components/Search";
+import axios from "axios";
 
-import { styled } from '@mui/material/styles';
-const Item = styled(Paper)(({ theme }) => ({
-  backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
-  ...theme.typography.body2,
-  padding: theme.spacing(1),
-  textAlign: 'center',
-  color: theme.palette.text.secondary,
-}));
 
-export default function Home() {
+export default function SearchHome() {
+  const initialMount = useRef(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [data, setData] = useState([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
+  
+  
+  useEffect(() => {
+    if (initialMount.current){
+      initialMount.current = false;
+      return;
+    }
+    console.log('Effect');
+    console.log(searchQuery);
+    axios.get(`https://api.sandbox.voice123.com/providers/search/?service=voice_over&keywords=${searchQuery}&page=${currentPage}`)
+      .then((response) => {
+        setData(response.data['providers']);
+        setTotalPages(parseInt(response.headers['x-list-total-pages']));
+        setCurrentPage(parseInt(response.headers['x-list-current-page']))
+      })
+      .catch((error) => {
+        console.log(error);
+      })
+  }, [searchQuery, currentPage])
+
   return (
-    <Box sx={{ flexGrow: 1 }}>
-      <Grid container spacing={2}>
-        <Grid item xs={8}>
-          <Item>xs=8</Item>
-        </Grid>
-        <Grid item xs={4}>
-          <Item>xs=4</Item>
-        </Grid>
-        <Grid item xs={4}>
-          <Item>xs=4</Item>
-        </Grid>
-        <Grid item xs={8}>
-          <Item>xs=8</Item>
-        </Grid>
+    <Grid container spacing={2}>
+      <Grid item xs={12}>
+        <SearchBar onSearch={setSearchQuery} />
       </Grid>
-    </Box>
-  )
+      <Grid item xs={12}>
+        <SearchResult 
+          items={data}
+          totalPages={totalPages}
+          currentPage={currentPage}
+          onPageChange={setCurrentPage}
+        />
+      </Grid>
+    </Grid>
+  );
 }
