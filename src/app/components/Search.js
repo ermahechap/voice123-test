@@ -69,14 +69,12 @@ function LoadingWrapper({ children, status }) {
   }
 }
 
-export function SearchResult({items, totalPages, loadStatus='empty', searchQuery, onPageChange }) {
-  
-  
+export function SearchResult({items, audioUrls, totalPages, loadStatus='empty', searchQuery, onPageChange }) {
   return (
     <Box>
       <LoadingWrapper status={loadStatus}>
         {items.map((item, i) => {
-          return <ResultItem key={i} info={item} searchQuery={searchQuery} />
+          return <ResultItem key={i} info={item} audioUrl={audioUrls[i]} searchQuery={searchQuery} />
         })}
       </LoadingWrapper>
       {items.length > 0 && <Pagination
@@ -91,15 +89,17 @@ export function SearchResult({items, totalPages, loadStatus='empty', searchQuery
   )
 }
 
-export function ResultItem({ info, searchQuery }) {
+export function ResultItem({ info, audioUrl, searchQuery }) {
   const userProfileURL = `https://voice123.com/${info.user.username}`
 
   function processDetail(detail, additionalDetail, searchQuery){
+    searchQuery = searchQuery.trim();
+    if (searchQuery.length == 0) return detail.slice(0, 150);
     const keywords = searchQuery.split(' ');
     const regex = new RegExp(`(${keywords.join('|')})`, 'gi');
 
     // Find string match over the defined fields
-    const match = [detail, additionalDetail].map((text) => {
+    let match = [detail, additionalDetail].map((text) => {
       if ((text === undefined) || (text === '')) return null;
       const paragraphs = text.split('.\n');
 
@@ -115,7 +115,7 @@ export function ResultItem({ info, searchQuery }) {
       });
       return matched_paragraph;
     }).reduce((acc, cur) => { return acc || cur });
-    if (match === null) return 'None';
+    if (match === null) return <Typography color="text.secondary" variant='body2'>None</Typography>;
 
     // Highlight keywords
     const chunks = []
@@ -123,14 +123,14 @@ export function ResultItem({ info, searchQuery }) {
     let last_index = 0;
     while ((result = regex.exec(match)) !== null) {
       chunks.push(match.slice(last_index, result.index));
-      chunks.push(<b>{match.slice(result.index, regex.lastIndex)}</b>);
+      chunks.push(<mark>{match.slice(result.index, regex.lastIndex)}</mark>);
       last_index = regex.lastIndex;
     }
     if(last_index < match.length - 1) {
       chunks.push(match.slice(last_index, match.length));
     }
 
-    return <p>{chunks.map((v) => {return v})}</p>
+    return <Typography variant="body2">{chunks.map((v, i) => {return <a key={i}>{v}</a>})}</Typography>
   }
 
   return (
@@ -153,19 +153,23 @@ export function ResultItem({ info, searchQuery }) {
             <Typography variant='subtitle1'>
               Description:
             </Typography>
-            <Typography variant="body2">
-              {processDetail(info.summary, info.additional_details, searchQuery)}
-            </Typography>
+            {processDetail(info.summary, info.additional_details, searchQuery)}
           </Grid>
           <Grid item md={4} xs={12} sx={{padding: 5}}>
-            <Typography variant='subtitle1'>
+            <Typography variant='body2'>
               Sample Audio: {info.relevant_sample.name}
             </Typography>
-            <AudioPlayer
-              src="https://file-examples.com/storage/fef677cdf46481c8d96f8cd/2017/11/file_example_MP3_700KB.mp3"
-              showSkipControls={false}
-              showJumpControls={false}
-            />
+            {audioUrl
+            ? <AudioPlayer
+                //autoPlay={false}
+                preload="none"
+                src={audioUrl}
+                showSkipControls={false}
+                showJumpControls={false}
+              />
+            : <Typography sx={{color: 'red'}}>Unable to load!</Typography>
+            }
+
           </Grid>
         </Grid>
       </CardContent>
