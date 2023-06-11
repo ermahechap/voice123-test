@@ -3,7 +3,17 @@
 Repository for voice 123 technical interview
 
 ## Application Setup Guide
+The application can be run by the following methods:
+### Node
+First install the dependencies with:
+> npm install
 
+Then run the application with the command:
+> npm run dev
+
+### Docker
+Run the following command using docker-compose:
+> docker-compose up --build
 
 ## Worklog
 - [x] Initial Project Setup (git setup, nextjs, basic components) -> ~1.5 Hours
