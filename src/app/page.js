@@ -11,7 +11,7 @@ export default function SearchHome() {
   const [data, setData] = useState([]);
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
-  
+  const [status, setStatus] = useState('empty');
   
   useEffect(() => {
     if (initialMount.current){
@@ -20,15 +20,23 @@ export default function SearchHome() {
     }
     console.log('Effect');
     console.log(searchQuery);
-    axios.get(`https://api.sandbox.voice123.com/providers/search/?service=voice_over&keywords=${searchQuery}&page=${currentPage}`)
-      .then((response) => {
-        setData(response.data['providers']);
-        setTotalPages(parseInt(response.headers['x-list-total-pages']));
-        setCurrentPage(parseInt(response.headers['x-list-current-page']))
-      })
-      .catch((error) => {
-        console.log(error);
-      })
+    setStatus('loading');
+    axios.get('https://api.sandbox.voice123.com/providers/search/',{
+      'params': {
+        'service': 'voice_over',
+        'keywords': searchQuery,
+        'page': currentPage
+      }
+    })
+    .then((response) => {
+      setData(response.data['providers']);
+      setTotalPages(parseInt(response.headers['x-list-total-pages']));
+      setCurrentPage(parseInt(response.headers['x-list-current-page']));
+      setStatus('loaded');
+    })
+    .catch((error) => {
+      console.log(error);
+    })
   }, [searchQuery, currentPage])
 
   return (
@@ -40,7 +48,8 @@ export default function SearchHome() {
         <SearchResult 
           items={data}
           totalPages={totalPages}
-          currentPage={currentPage}
+          loadStatus={status}
+          searchQuery={searchQuery}
           onPageChange={setCurrentPage}
         />
       </Grid>
